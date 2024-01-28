@@ -122,6 +122,8 @@ def depthFirstSearch(problem: SearchProblem):
 def breadthFirstSearch(problem: SearchProblem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
+    # credit for BFS algo intuition: [CS188 FA23] Lecture 2 - Uninformed Search
+    # at 53:00 mins: https://www.youtube.com/watch?v=qDFFxx_j5Xo
     fringe = util.Queue()
     visited = set()
     start = problem.getStartState()
@@ -130,7 +132,7 @@ def breadthFirstSearch(problem: SearchProblem):
     if problem.isGoalState(start):
         return []
     fringe.push((start, []))
-
+    print(fringe.list[0])
     while not fringe.isEmpty():
         state, actions = fringe.pop()
         # to avoid expanding same node more than once
@@ -152,7 +154,21 @@ def breadthFirstSearch(problem: SearchProblem):
 def uniformCostSearch(problem: SearchProblem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # actions = []
+    fringe = util.PriorityQueue()
+    start = problem.getStartState()
+    if problem.isGoalState(start):
+        return []
+    fringe.push((start, []), 0)
+    # print(fringe.heap)
+    while not fringe.isEmpty():
+        (state, actions), item = fringe.pop()
+        if problem.isGoalState(state):
+            return actions
+        for successor_state, action, cost in problem.getSuccessors(state):
+            cost = problem.getCostOfActions(actions)
+            fringe.push((successor_state, actions + [action]), cost)
+    return actions
 
 
 def nullHeuristic(state, problem=None):
