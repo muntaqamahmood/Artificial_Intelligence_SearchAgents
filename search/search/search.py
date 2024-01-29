@@ -97,78 +97,89 @@ def depthFirstSearch(problem: SearchProblem):
     # print("Start's successors:", problem.getSuccessors(problem.getStartState()))
 
     fringe = util.Stack()
-    visited = set()
+    explored = set()
     start = problem.getStartState()
 
     # edge case / best case
     if problem.isGoalState(start):
         return []
-    fringe.push((start, []))
+    fringe.push(([], start))  # store the states and their paths as tuple
 
-    while not fringe.isEmpty():
-        state, actions = fringe.pop()
+    while fringe.isEmpty() == False:
+        actions, state = fringe.pop()
+        # current state is the goal, so return list of actions
         if problem.isGoalState(state):
             return actions
-        visited.add(state)
-        # build search tree
-        for successor_state, action, cost in problem.getSuccessors(state):
-            if successor_state not in visited:
-                fringe.push((successor_state, actions + [action]))
-            # actions.append(action)
-    # print(actions)
-    return actions
+        explored.add(state)
+        # search tree
+        for successor_state, action, _ in problem.getSuccessors(state):
+            appended_path = actions + [action]
+            if successor_state not in explored:
+                fringe.push((appended_path, successor_state))
+    return []
 
 
 def breadthFirstSearch(problem: SearchProblem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
     # credit for BFS algo intuition: [CS188 FA23] Lecture 2 - Uninformed Search
-    # at 53:00 mins: https://www.youtube.com/watch?v=qDFFxx_j5Xo
+    # https://www.youtube.com/watch?v=qDFFxx_j5Xo
     fringe = util.Queue()
-    visited = set()
+    explored = []
     start = problem.getStartState()
-
     # edge case / best case
     if problem.isGoalState(start):
         return []
-    fringe.push((start, []))
-    print(fringe.list[0])
-    while not fringe.isEmpty():
-        state, actions = fringe.pop()
+    fringe.push(([], start))
+    # print(fringe.list[0])
+    while fringe.isEmpty() == False:
+        actions, state = fringe.pop()
         # to avoid expanding same node more than once
-        if state in visited:
+        if state in explored:
             continue
-        visited.add(state)
-
+        explored.append(state)
+        # current state is the goal, so return list of actions
         if problem.isGoalState(state):
             return actions
-        # build search tree
-        for successor_state, action, cost in problem.getSuccessors(state):
-            if successor_state not in visited:
-                fringe.push((successor_state, actions + [action]))
-            # actions.append(action)
-    # print(actions)
-    return actions
+        # search tree
+        for successor_state, action, _ in problem.getSuccessors(state):
+            appended_path = actions + [action]
+            if successor_state not in explored:
+                fringe.push((appended_path, successor_state))
+    return []
 
 
 def uniformCostSearch(problem: SearchProblem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    # actions = []
+    # credit for UCS algo intuition: [CS188 FA23] Lecture 2 - Uninformed Search
+    # https://www.youtube.com/watch?v=qDFFxx_j5Xo
+    # print("Start's successors:", problem.getSuccessors(problem.getStartState()))
+    explored = set()
     fringe = util.PriorityQueue()
     start = problem.getStartState()
     if problem.isGoalState(start):
         return []
-    fringe.push((start, []), 0)
+    fringe.push((0, start, []), 0)  # ((triple), priority)
     # print(fringe.heap)
-    while not fringe.isEmpty():
-        (state, actions), item = fringe.pop()
+    while fringe.isEmpty() == False:
+        cost, state, actions = fringe.pop()
         if problem.isGoalState(state):
             return actions
-        for successor_state, action, cost in problem.getSuccessors(state):
-            cost = problem.getCostOfActions(actions)
-            fringe.push((successor_state, actions + [action]), cost)
-    return actions
+        if state in explored:
+            continue
+        explored.add(state)
+        for successor_state, action, step_cost in problem.getSuccessors(state):
+            # priority_or_cost = problem.getCostOfActions(actions)
+            priority_or_cost = cost + step_cost
+            if successor_state not in explored:
+                # make cost same as priority so we take elems of same cost
+                # to explore at each level
+                fringe.update(
+                    (priority_or_cost, successor_state, actions + [action]),
+                    priority_or_cost,
+                )
+    return []
 
 
 def nullHeuristic(state, problem=None):
@@ -182,7 +193,31 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # credit for A* search algo intuition: [CS188 FA23] Lecture 3 - Informed Search
+    # at 39:00 mins https://www.youtube.com/watch?v=nS6x5K7byng
+    explored = []
+    fringe = util.PriorityQueue()
+    start = problem.getStartState()
+    if problem.isGoalState(start):
+        return []
+    fringe.push((0, start, []), 0)  # ((triple), priority)
+
+    while fringe.isEmpty() == False:
+        cost, state, actions = fringe.pop()
+        if problem.isGoalState(state):
+            return actions
+        if state in explored:
+            continue
+        explored.append(state)
+        for successor_state, action, step_cost in problem.getSuccessors(state):
+            priority_or_cost = cost + step_cost
+            if successor_state not in explored:
+                # priority = heuristic cost = ucs cost (cost + step_cost) + greedy cost (h(x))
+                fringe.update(
+                    (priority_or_cost, successor_state, actions + [action]),
+                    priority_or_cost + heuristic(successor_state, problem),
+                )
+    return []
 
 
 # Abbreviations
